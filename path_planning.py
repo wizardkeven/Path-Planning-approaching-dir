@@ -59,28 +59,30 @@ cost = [2, 1, 20] # cost has 3 values, corresponding to making
 # ----------------------------------------
 
 # f(x,y) = min(f(x2,y2) + cost_action(i))
-print
-print 'cost: '+'L'+' # '+'R'
-print '    '+str(cost)
-print
+# print
+# print 'cost: '+'L'+' # '+'R'
+# print '    '+str(cost)
+# print
 def optimum_policy2D(grid,init,goal,cost):
     # output grid
     policy2D = [[' ' for x in range(len(grid[0]))] for y in range(len(grid))]
-    value = [[99 for row in range(len(grid[0]))] for col in range(len(grid))]
+    value = [[999 for row in range(len(grid[0]))] for col in range(len(grid))]
     directions = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
+    visited = [[False for row in range(len(grid[0]))] for col in range(len(grid))]
     # initialize directions and distance with starting point direction
     directions[init[0]][init[1]] = init[2]
     value[init[0]][init[1]] = 0
+    visited[init[0]][init[1]] = True
 
     # 0: go straight; 3: right turn; 1: left turn
     dir_diff = [3,0,1]
     
     change = True
 
-    print 'grid'
+    print ('grid')
     for gg in grid:
-        print gg
-    print
+        print (gg)
+    print()
     while change:
         change = False
                
@@ -95,6 +97,7 @@ def optimum_policy2D(grid,init,goal,cost):
 
             #     el
                 if grid[x][y] == 0:
+                    
                     # suppose current possible forwarding
                     for cur_f in range(len(forward)):
                         # possible previous forwarding
@@ -129,6 +132,7 @@ def optimum_policy2D(grid,init,goal,cost):
 
                                     value[x][y] = v2
                                     directions[x][y] = cur_f
+
                                     # print 'current value matrix:'
                                     # for vv in value:
                                     #     print vv
@@ -138,26 +142,71 @@ def optimum_policy2D(grid,init,goal,cost):
                                     #     print dd
                                     # print '\nAssign => directions['+str(x)+']['+str(y)+'] = '+str(cur_f)+'\n'
 
-                                    policy2D[x2][y2] = action_name[pre_a]
-                            if x ==0 and y in [3,4]:
-                                print '============================================'
+                                    # policy2D[x2][y2] = action_name[pre_a]
+                            # if x ==0 and y in [3,4]:
+                            #     print '============================================'
     
-                if goal[0] == x and goal[1] == y:
-                        #         if value[x][y] > 0:
-                        #             value[x][y] = 0
-                    policy2D[x][y] = '*'    
+                # if goal[0] == x and goal[1] == y:
+                #         #         if value[x][y] > 0:
+                #         #             value[x][y] = 0
+                #     policy2D[x][y] = '*'    
+    current_node = init[:-1]
+
+    while current_node != '':
+       
+        x, y = current_node
+
+        current_node = ''
+
+        best_action = ""
+        min_diff = 99
+        best_forward = -1
+        for cur_f in range(len(forward)):
+            # possible previous forwarding
+            x2 = x + forward[cur_f][0]
+            y2 = y + forward[cur_f][1]
+
+            if x2 >= 0 and x2 < len(grid) and y2 >= 0 and y2 < len(grid[0]) and grid[x2][y2] == 0 and value[x][y] < 999 and value[x2][y2] < 999 and visited[x][y]:
+                
+                va_diff = value[x][y] - value[x2][y2]
+
+                m_dir_diff = (cur_f - directions[x][y] + 4)%4
+                # previous node should be the visited node with least cost to current node        
+                if directions[x][y] > -1 and m_dir_diff != 2:
+                    cur_a = -1
+                    # current action is turn right
+                    if m_dir_diff == 3:
+                        pre_a = 0
+                    elif m_dir_diff == 0: # go staight
+                        cur_a = 1
+                    else: # turn left
+                        cur_a = 2
+                    
+                    if va_diff < min_diff and va_diff > 0:
+                        min_diff = va_diff
+                        best_action = action_name[cur_a]
+                        best_forward = cur_f
+
+        if min_diff < 99:
+            policy2D[x][y] = best_action
+            visited[x2][y2] = True
+            current_node = [x,y]
+            directions[x2][y2] = best_forward
+                        
+
+
     for i in range(len(value)):
         for j in range(len(value[0])):
             if value[i][j] == 999:
                 value[i][j] = 0
-    print 'value'
+    print ('value')
     for vv in value:
         print(vv)
-    print
-    print 'directions'
+    print()
+    print ('directions')
     for dd in directions:
-        print dd
-    print
+        print (dd)
+    print()
 
     return policy2D
 
