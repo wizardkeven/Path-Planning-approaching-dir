@@ -66,13 +66,14 @@ print
 def optimum_policy2D(grid,init,goal,cost):
     # output grid
     policy2D = [[' ' for x in range(len(grid[0]))] for y in range(len(grid))]
-    value = [[999 for row in range(len(grid[0]))] for col in range(len(grid))]
+    value = [[99 for row in range(len(grid[0]))] for col in range(len(grid))]
     directions = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
     # initialize directions and distance with starting point direction
     directions[init[0]][init[1]] = init[2]
     value[init[0]][init[1]] = 0
-    # open_list = [init]
-    # trajectory = [init]
+
+    # 0: go straight; 3: right turn; 1: left turn
+    dir_diff = [3,0,1]
     
     change = True
 
@@ -94,41 +95,50 @@ def optimum_policy2D(grid,init,goal,cost):
 
             #     el
                 if grid[x][y] == 0:
-                    for i in range(len(action)):
-                        return_action = action[i] # get possible action return to previous state 1,0,-1 corresponding to previously turned left(-1), go straight(0) and turn right(1)
-                        cur_f = (directions[x][y] - back_action + 4)%4 # get previous direction
-                        x2 = x + forward[cur_f][0]
-                        y2 = y + forward[cur_f][1]
+                    # suppose current possible forwarding
+                    for cur_f in range(len(forward)):
+                        # possible previous forwarding
+                        x2 = x - forward[cur_f][0]
+                        y2 = y - forward[cur_f][1]
 
                         if x2 >= 0 and x2 < len(grid) and y2 >= 0 and y2 < len(grid[0]) and grid[x2][y2] == 0:
-                            if x ==0 and y ==4 and x2 == 0 and y == 3:
-                                print
-                                print 'x , y ==>             ('+str(x)+' , '+str(y)+')'
-                                print 'pre_a ==>              '+str(action_name[pre_a])
-                                print 'cur_f ==>              '+str(forward_name[cur_f])
-                                print 'Previous dir ==>      ('+str(x2)+' , '+str(y2)+') ==> '+str(directions[x2][y2])
+                            # if x ==0 and y ==4 and x2 == 0 and y == 3:
+                            #     print
+                            #     print 'x , y ==>             ('+str(x)+' , '+str(y)+')'
+                            #     print 'cur_f ==>              '+str(forward_name[cur_f])
+                            #     print 'Previous dir ==>      ('+str(x2)+' , '+str(y2)+') ==> '+str(directions[x2][y2])
+                            m_dir_diff = (cur_f - directions[x2][y2] + 4)%4
+                            # previous node should be the visited node with least cost to current node        
+                            if directions[x2][y2] > -1 and m_dir_diff != 2:
+                                pre_a = -1
+                                # previous action is turn right
+                                if m_dir_diff == 3:
+                                    pre_a = 0
+                                elif m_dir_diff == 0: # go staight
+                                    pre_a = 1
+                                else: # turn left
+                                    pre_a = 2
 
-                            if directions[x2][y2] > -1:
                                 v2 = value[x2][y2] + cost[pre_a]
-                                if x2 == 0 and y == 3:
-                                    print 'x2, y2 ==>            ('+str(x2)+' , '+str(y2)+')'
-                                    print 'v2 ==>                 '+str(v2)
+                                # if x2 == 0 and y == 3:
+                                #     print 'x2, y2 ==>            ('+str(x2)+' , '+str(y2)+')'
+                                #     print 'v2 ==>                 '+str(v2)
 
                                 if v2 < value[x][y]:
                                     change = True
 
                                     value[x][y] = v2
-                                    directions[x][y] = (directions[x2][y2] - pre_a + 4)%4
-                                    print 'current value matrix:'
-                                    for vv in value:
-                                        print vv
-                                    print
-                                    print 'current direction matrix:'
-                                    for dd in directions:
-                                        print dd
-                                    print '\nAssign => directions['+str(x)+']['+str(y)+'] = '+str(cur_f)+'\n'
+                                    directions[x][y] = cur_f
+                                    # print 'current value matrix:'
+                                    # for vv in value:
+                                    #     print vv
+                                    # print
+                                    # print 'current direction matrix:'
+                                    # for dd in directions:
+                                    #     print dd
+                                    # print '\nAssign => directions['+str(x)+']['+str(y)+'] = '+str(cur_f)+'\n'
 
-                                    policy2D[x2][y2] = action_name[i]
+                                    policy2D[x2][y2] = action_name[pre_a]
                             if x ==0 and y in [3,4]:
                                 print '============================================'
     
