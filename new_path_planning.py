@@ -83,7 +83,7 @@ def optimum_policy2D(grid,init,goal,cost):
     print(cost)
     found = False  # flag that is set when search is complete
     resign = False # flag set if we can't find expand
-
+    pre_ff = -1
     while not found and not resign:
         if len(open) == 0:
             resign = True
@@ -96,7 +96,8 @@ def optimum_policy2D(grid,init,goal,cost):
             y = next[2]
             g = next[0]
             f = next[3]
-
+            if pre_ff > 0:
+                dd_f = f - pre_ff
             if closed[x][y] == 1:
                 expand1[x][y] = g
                 directions[x][y] = f
@@ -104,6 +105,7 @@ def optimum_policy2D(grid,init,goal,cost):
                 step_m = [expand1[x][y],g]
                 dir_m = [directions[x][y],f]
                 if expand1[x][y] < 0:
+                    closed[x][y] -=1
                     step_m = g
                     dir_m = f
 
@@ -154,15 +156,19 @@ def optimum_policy2D(grid,init,goal,cost):
     print("expand1")
     for ex in expand1:
         print(ex)
+    print("\nclosed")
+    for cl in closed:
+        print(cl)
     print("\ndirections")
     for di in directions:
         print(di)
-    back_node = goal+[0]
+    print()
+    back_node = goal
     end = False
 
     while back_node != '' and not end:
 
-        x, y, f = back_node
+        x, y = back_node
         back_node = ''
 
         if x == init[1] and y == init[2]:
@@ -181,19 +187,26 @@ def optimum_policy2D(grid,init,goal,cost):
 
                 if x2 >= 0 and x2 < len(grid) and y2 >=0 and y2 < len(grid[0]) and grid[x2][y2] == 0 and closed[x2][y2] > 0:
                     exp_diff = min_exp_diff
-                    if closed[x2][y2] == 1 and expand1[x][y] > expand1[x2][y2]:
+                    if closed[x2][y2] == 1:
                         need_del = False
                         exp_diff = expand1[x][y] - expand1[x2][y2]
+                        if expand1[x][y] > expand1[x2][y2] and exp_diff < min_exp_diff:
+                            min_exp_diff = exp_diff          
+                            pre_x = x2
+                            pre_y = y2
                     else:
                         need_del = True
+
                         for ite in range(closed[x2][y2]):
-                            exp_m = expand1[x2][y2][ite]
-                            if expand1[x][y] > exp_m:
-                                exp_diff = expand1[x][y] - exp_m
+
+                            if expand1[x][y] > expand1[x2][y2][ite]:
+
+                                exp_diff = expand1[x][y] - expand1[x2][y2][ite]
+
                                 if exp_diff < min_exp_diff:
+
                                     min_exp_diff = exp_diff          
                                     pre_it = ite
-                                    pre_f = f2
                                     pre_x = x2
                                     pre_y = y2
 
@@ -203,31 +216,38 @@ def optimum_policy2D(grid,init,goal,cost):
             else:
                 if closed[pre_x][pre_y] > 1:
                     del expand1[x2][y2][pre_it]
+                    del directions[x2][y2][pre_it]
+
                     if len(expand1[x2][y2]) == 1:
                         expand1[x2][y2] = expand1[x2][y2][0]
+
+                    if len(directions[x2][y2]) == 1:
+                        directions[x2][y2] = directions[x2][y2][0]
                 else:
                     closed[pre_x][pre_y] -= 1
             
-            f_diff = (f - pre_f + 4)%4
-            if goal[0] == x and goal[1] == y:
-                policy2D[x][y] = '*'
-                policy2D[pre_x][pre_y] = action_name[1]
-            else:
-                # previous node should be the visited node with least cost to current node        
-                if f_diff != 2:
-                    pre_a = -1
-                    # previous action is turn right
-                    if f_diff == 3:
-                        pre_a = 0
-                    elif f_diff == 0: # go staight
-                        pre_a = 1
-                    else: # turn left
-                        pre_a = 2
-                    back_node = [pre_x, pre_y,f2]
+            f_diff = (directions[x][y] - directions[pre_x][pre_y] + 4)%4
+
+            # if goal[0] == x and goal[1] == y:
+            #     policy2D[x][y] = '*'
+            #     policy2D[pre_x][pre_y] = action_name[1]
+            # else:
+            # previous node should be the visited node with least cost to current node        
+            if f_diff != 2:
+                pre_a = -1
+                # previous action is turn right
+                if f_diff == 3:
+                    pre_a = 0
+                elif f_diff == 0: # go staight
+                    pre_a = 1
+                else: # turn left
+                    pre_a = 2
+                policy2D[pre_x][pre_y] = action_name[pre_a]
+                back_node = [pre_x, pre_y]
 
     return policy2D
 
 p2 = optimum_policy2D(grid,init,goal,cost)
 
-# for p in p2:
-#     print(p)
+for p in p2:
+    print(p)
