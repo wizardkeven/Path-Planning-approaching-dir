@@ -42,7 +42,7 @@ init = [4, 3, 0] # given in the form [row,col,direction]
                 
 goal = [2, 0] # given in the form [row,col]
 
-cost = [2, 1, 20] # cost has 3 values, corresponding to making 
+cost = [3, 1, 2] # cost has 3 values, corresponding to making 
                   # a right turn, no turn, and a left turn
 
 # EXAMPLE OUTPUT:
@@ -68,11 +68,11 @@ def optimum_policy2D(grid,init,goal,cost):
     policy2D = [[' ' for x in range(len(grid[0]))] for y in range(len(grid))]
     value = [[999 for row in range(len(grid[0]))] for col in range(len(grid))]
     directions = [[-1 for row in range(len(grid[0]))] for col in range(len(grid))]
-    visited = [[False for row in range(len(grid[0]))] for col in range(len(grid))]
+    visited = [[0 for row in range(len(grid[0]))] for col in range(len(grid))]
     # initialize directions and distance with starting point direction
     directions[init[0]][init[1]] = init[2]
     value[init[0]][init[1]] = 0
-    visited[init[0]][init[1]] = True
+    visited[init[0]][init[1]] = 1
 
     # 0: go straight; 3: right turn; 1: left turn
     dir_diff = [3,0,1]
@@ -131,7 +131,10 @@ def optimum_policy2D(grid,init,goal,cost):
                                     change = True
 
                                     value[x][y] = v2
-                                    directions[x][y] = cur_f
+                                    if directions[x][y] < 0:
+                                        directions[x][y] = cur_f
+                                    else:
+                                        directions[x][y] = [directions[x][y], cur_f]
 
                                     # print 'current value matrix:'
                                     # for vv in value:
@@ -150,6 +153,7 @@ def optimum_policy2D(grid,init,goal,cost):
                 #         #         if value[x][y] > 0:
                 #         #             value[x][y] = 0
                 #     policy2D[x][y] = '*'    
+    
     current_node = init[:-1]
 
     while current_node != '':
@@ -158,7 +162,13 @@ def optimum_policy2D(grid,init,goal,cost):
 
         current_node = ''
 
+        if visited[x][y] > 2:
+            print('impossible path at {} , {}'.format(x,y))
+            continue
+        
+        print('x , y ==>'+str(x)+' , '+str(y))
         best_action = ""
+        best_node = []
         min_diff = 99
         best_forward = -1
         for cur_f in range(len(forward)):
@@ -166,32 +176,44 @@ def optimum_policy2D(grid,init,goal,cost):
             x2 = x + forward[cur_f][0]
             y2 = y + forward[cur_f][1]
 
-            if x2 >= 0 and x2 < len(grid) and y2 >= 0 and y2 < len(grid[0]) and grid[x2][y2] == 0 and value[x][y] < 999 and value[x2][y2] < 999 and visited[x][y]:
-                
-                va_diff = value[x][y] - value[x2][y2]
+            if x2 >= 0 and x2 < len(grid) and y2 >= 0 and y2 < len(grid[0]) and grid[x2][y2] == 0 and value[x][y] < 999 and value[x2][y2] < 999:
+                if visited[x2][y2] > 1:
+                    continue
+                if visited[x][y] == 2 and visited[x2][y2] >= 1:
+                    print('Overlapping ==> {}, {}'.format(x2,y2))
+                    continue
+                print('\ndebug: x2 , y2 ==> '+str(x2)+' , '+str(y2))
+                va_diff = abs(value[x2][y2] - value[x][y])
+                print('va_diff ==> '+str(va_diff))
 
                 m_dir_diff = (cur_f - directions[x][y] + 4)%4
+                print('m_dir_diff ==> '+str(m_dir_diff))
+                print('directions[{}][{}] = {}'.format(x,y,directions[x][y]))
                 # previous node should be the visited node with least cost to current node        
                 if directions[x][y] > -1 and m_dir_diff != 2:
                     cur_a = -1
                     # current action is turn right
                     if m_dir_diff == 3:
-                        pre_a = 0
+                        cur_a = 0
                     elif m_dir_diff == 0: # go staight
                         cur_a = 1
                     else: # turn left
                         cur_a = 2
                     
-                    if va_diff < min_diff and va_diff > 0:
+                    if va_diff < min_diff and va_diff >= 0:
+
                         min_diff = va_diff
                         best_action = action_name[cur_a]
                         best_forward = cur_f
+                        best_node = [x2,y2]
 
         if min_diff < 99:
             policy2D[x][y] = best_action
-            visited[x2][y2] = True
-            current_node = [x,y]
-            directions[x2][y2] = best_forward
+            visited[best_node[0]][best_node[1]] += 1
+            current_node = best_node
+            directions[best_node[0]][best_node[1]] = best_forward
+            print('\nChanged ==> min_diff: {}\tbest_action: {}\tbest_forward: {}\tbest_node: {}\tvisited[{}][{}]: {}'.format(min_diff,best_action,best_forward,best_node,best_node[0],best_node[1],visited[best_node[0]][best_node[1]]) )
+        print('\n==============================================\n')
                         
 
 

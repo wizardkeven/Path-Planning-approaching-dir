@@ -88,5 +88,9 @@ def search(grid,init,goal,cost,heuristic):
     
 ex = search(grid,init,goal,cost,heuristic)
 
+for i in range(len(ex)):
+    for j in range(len(ex[0])):
+        if ex[i][j] == -1:
+            ex[i][j] = 0
 for ll in ex:
     print(ll)
